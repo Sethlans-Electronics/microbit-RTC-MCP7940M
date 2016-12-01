@@ -11,7 +11,7 @@ MicroBitRealTimeClock::MicroBitRealTimeClock(MicroBitI2C &_i2c, uint16_t address
 int MicroBitRealTimeClock::init()
 {
 	uint8_t command = 0b10000000;
-	
+
 	writeCommand(MCP7940M_RTCSEC, command);
 
 	return MICROBIT_OK;
@@ -28,7 +28,7 @@ int MicroBitRealTimeClock::getTime(Time *time)
 	uint8_t secten = (( secondBuffer & MCP7940M_SECTEN ) >> 4) * 10;
 
 	time->seconds = secten + secone;
-	
+
 	// Read the minutes
 	uint8_t minuteBuffer;
 	readCommand(MCP7940M_RTCMIN, &minuteBuffer, 1);
@@ -62,12 +62,45 @@ int MicroBitRealTimeClock::getTime(Time *time)
 	return MICROBIT_OK;
 }
 
+int MicroBitRealTimeClock::getDate(Date *date)
+{
+	// TODO: Optimize to do only one i2c call
+
+	// Read the days
+	uint8_t dayBuffer;
+	readCommand(MCP7940M_RTCDATE, &dayBuffer, 1);
+	uint8_t dateone = dayBuffer & MCP7940M_DATEONE;
+	uint8_t dateten = (( dayBuffer & MCP7940M_DATETEN ) >> 4) * 10;
+
+	date->days = dateten + dateone;
+
+	// Read the months
+	uint8_t monthBuffer;
+	readCommand(MCP7940M_RTCMTH, &monthBuffer, 1);
+	uint8_t monthone = monthBuffer & MCP7940M_MTHONE;
+	uint8_t monthten = (( monthBuffer & MCP7940M_MTHTEN )  >> 4) * 10;
+
+	date->months = monthten + monthone;
+
+	// Read the years
+	uint8_t yearBuffer;
+	readCommand(MCP7940M_RTCYEAR, &yearBuffer, 1);
+	uint8_t yearone = yearBuffer & MCP7940M_YRONE;
+	uint8_t yearten = (( yearBuffer & MCP7940M_YRTEN ) >> 4) * 10;
+
+	date->years = yearten + yearone;
+
+	// Get if leap year
+	bool leapYear = ( monthBuffer & MCP7940M_LPYR ) >> 5;
+	date->leapYear;
+}
+
 int MicroBitRealTimeClock::setTime(const Time &time)
 {
 	// Split the second to BCD
 	uint8_t secten = (time.seconds / 10) << 4;
 	uint8_t secone = time.seconds % 10;
-	
+
 	uint8_t secbuffer = secten | secone;
 
 	writeCommand(MCP7940M_RTCSEC, secbuffer);
@@ -75,7 +108,7 @@ int MicroBitRealTimeClock::setTime(const Time &time)
 	// Split the minutes to BCD
 	uint8_t minten = (time.minutes / 10 ) << 4;
 	uint8_t minone = time.minutes % 10;
-	
+
 	uint8_t minbuffer = minten | minone;
 
 	writeCommand(MCP7940M_RTCMIN, minbuffer);
@@ -88,7 +121,7 @@ int MicroBitRealTimeClock::setTime(const Time &time)
 
 	if( time.AMPM )
 		hourBuffer |= MCP7940M_AMPM;
-	
+
 	uint8_t hourone = time.hours % 10;
 	uint8_t hourten = (time.hours / 10) << 4;
 

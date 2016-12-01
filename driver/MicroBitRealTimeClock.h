@@ -18,6 +18,10 @@
 #define MCP7940M_RTCSEC		0x00
 #define MCP7940M_RTCMIN		0x01
 #define MCP7940M_RTCHOUR	0x02
+#define MCP7940M_RTCWKDAY	0x03
+#define MCP7940M_RTCDATE	0x04
+#define MCP7940M_RTCMTH		0x05
+#define MCP7940M_RTCYEAR	0x06
 
 // Second bit masks
 #define MCP7940M_SECONE		0x0f
@@ -34,7 +38,21 @@
 #define MCP7940M_AMPM		0x20
 #define MCP7940M_1224		0x40
 
-// Date time structures
+// Day bit masks
+#define MCP7940M_WKDAY		0x07
+#define MCP7940M_DATEONE	0x0f
+#define MCP7940M_DATETEN	0x30
+
+// Month bit masks
+#define MCP7940M_MTHONE		0x0f
+#define MCP7940M_MTHTEN		0x10
+
+// Year bit masks
+#define MCP7940M_LPYR		0x20
+#define MCP7940M_YRONE		0x0f
+#define MCP7940M_YRTEN		0xf0
+
+// Time structure
 struct Time
 {
 	// Time format, 12 = true 24 = false
@@ -47,6 +65,16 @@ struct Time
 	uint8_t hours;
 };
 
+// Date structure
+struct Date
+{
+	uint8_t days;
+	uint8_t months;
+	uint8_t years;
+
+	bool leapYear;
+};
+
 class MicroBitRealTimeClock : public MicroBitComponent
 {
 public:
@@ -54,6 +82,7 @@ public:
 
 	int init();
 	int getTime(Time *time);
+	int getDate(Date *date);
 	int setTime(const Time &time);
 
 private:
